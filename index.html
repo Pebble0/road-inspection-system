@@ -1,0 +1,2576 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>路巡双擎——高速公路巡检处治一体化决策系统</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root {
+      --blue: #1f5f9f;
+      --blue2: #2c7ec2;
+      --dark: #13283c;
+      --bg: #eef3f7;
+      --card: #ffffff;
+      --line: #d8e2ea;
+      --text: #1c2d3d;
+      --muted: #6d7f8f;
+      --green: #2f8f54;
+      --orange: #c97918;
+      --red: #b83a3a;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    button {
+      border: 0;
+      background: var(--blue);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    button:hover {
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.primary {
+      background: #c97918;
+    }
+
+    button.ghost {
+      background: transparent;
+      color: var(--blue);
+      border: 1px solid #9fb8cd;
+    }
+
+    input {
+      width: 100%;
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      outline: none;
+      margin: 8px 0 16px;
+    }
+
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(120deg, rgba(19, 40, 60, 0.92), rgba(31, 95, 159, 0.84));
+      padding: 32px;
+      transition: opacity 0.38s ease, transform 0.38s ease;
+    }
+
+    .login-page.login-exit {
+      opacity: 0;
+      transform: scale(0.985);
+      pointer-events: none;
+    }
+
+    .login-card {
+      width: min(1080px, 100%);
+      min-height: 560px;
+      display: grid;
+      grid-template-columns: 1.35fr 0.75fr;
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
+      animation: loginRise 0.55s cubic-bezier(.2,.8,.2,1) both;
+    }
+
+    @keyframes loginRise {
+      from { opacity: 0; transform: translateY(24px) scale(0.985); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-intro {
+      padding: 70px 64px;
+      background: linear-gradient(135deg, #17344e, #1f5f9f);
+      color: white;
+    }
+
+    .system-label {
+      display: inline-block;
+      padding: 8px 14px;
+      border: 1px solid rgba(255,255,255,0.55);
+      border-radius: 999px;
+      margin-bottom: 32px;
+      font-size: 14px;
+    }
+
+    .login-intro h1 {
+      margin: 0;
+      font-size: 58px;
+      letter-spacing: 5px;
+    }
+
+    .login-intro h2 {
+      margin: 14px 0 28px;
+      font-size: 23px;
+      font-weight: 500;
+    }
+
+    .login-intro p {
+      max-width: 620px;
+      line-height: 1.9;
+      color: rgba(255,255,255,0.88);
+    }
+
+    .flow-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 36px;
+    }
+
+    .flow-line span {
+      position: relative;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 10px;
+      padding: 9px 12px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .flow-line span::after {
+      content: attr(data-tip);
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 12px);
+      transform: translateX(-50%);
+      width: max-content;
+      max-width: 360px;
+      white-space: normal;
+      line-height: 1.6;
+      background: rgba(19, 40, 60, 0.96);
+      color: #ffffff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 20;
+      font-size: 14px;
+    }
+
+    .flow-line span::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 5px);
+      transform: translateX(-50%);
+      border: 7px solid transparent;
+      border-top-color: rgba(19, 40, 60, 0.96);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 21;
+    }
+
+    .flow-line span:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    .flow-line span:hover::before {
+      opacity: 1;
+    }
+
+    .flow-line span:first-child::after {
+      left: 0;
+      transform: translateX(0);
+    }
+
+    .flow-line span:first-child:hover::after {
+      transform: translateX(0) translateY(-4px);
+    }
+
+    .flow-line span:first-child::before {
+      left: 42px;
+    }
+
+    .flow-line span:last-child::after {
+      left: auto;
+      right: 0;
+      transform: translateX(0);
+    }
+
+    .flow-line span:last-child:hover::after {
+      transform: translateX(0) translateY(-4px);
+    }
+
+    .flow-line span:last-child::before {
+      left: auto;
+      right: 42px;
+      transform: translateX(0);
+    }
+
+    .login-panel {
+      padding: 70px 46px;
+      align-self: center;
+    }
+
+    .login-panel h3 {
+      margin: 0 0 8px;
+      font-size: 26px;
+    }
+
+    .login-panel p {
+      color: var(--muted);
+      margin-bottom: 30px;
+    }
+
+    .login-panel label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .login-panel button {
+      width: 100%;
+      height: 44px;
+      margin-top: 8px;
+    }
+
+    .app-page {
+      display: none;
+      min-height: 100vh;
+      grid-template-columns: 240px 1fr;
+      opacity: 0;
+    }
+
+    .app-page.app-enter {
+      animation: appFadeIn 0.46s ease forwards;
+    }
+
+    @keyframes appFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .side {
+      background: #17344e;
+      color: #fff;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    .brand {
+      padding: 4px 8px 22px;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      margin-bottom: 18px;
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 25px;
+      letter-spacing: 3px;
+      margin-bottom: 6px;
+    }
+
+    .brand span {
+      font-size: 13px;
+      color: rgba(255,255,255,0.72);
+    }
+
+    .side nav button {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      color: rgba(255,255,255,0.82);
+      margin-bottom: 8px;
+      border-radius: 10px;
+      transition: background 0.22s ease, color 0.22s ease, transform 0.22s ease;
+    }
+
+    .side nav button.active,
+    .side nav button:hover {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+      transform: translateX(4px);
+    }
+
+    .main {
+      min-width: 0;
+    }
+
+    .top {
+      height: 72px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 26px;
+    }
+
+    .top h2 {
+      margin: 0 0 4px;
+      font-size: 22px;
+    }
+
+    .top p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      color: var(--muted);
+    }
+
+    .content {
+      padding: 24px;
+    }
+
+    .page {
+      display: none;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .page.active {
+      display: block;
+      animation: pageFadeIn 0.34s cubic-bezier(.2,.8,.2,1) forwards;
+    }
+
+    @keyframes pageFadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .metric, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 10px 24px rgba(33, 53, 71, 0.06);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .metric:hover, .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px rgba(33, 53, 71, 0.1);
+    }
+
+    .metric {
+      padding: 22px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 34px;
+      margin: 10px 0 8px;
+      color: var(--blue);
+    }
+
+    .metric small {
+      color: var(--muted);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+    }
+
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      padding: 22px;
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .process {
+      display: grid;
+      gap: 12px;
+    }
+
+    .process div {
+      padding: 13px 14px;
+      background: #f5f8fb;
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+    }
+
+    .recent-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .recent-item {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 12px;
+    }
+
+    .recent-item img {
+      width: 80px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: #f5f8fb;
+    }
+
+    .recent-item b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .recent-item span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+
+    .recent-item .badge {
+      color: #ffffff !important;
+    }
+
+    .inspect-layout {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+    }
+
+    .upload-box {
+      min-height: 390px;
+      border: 2px dashed #b9c9d8;
+      border-radius: 12px;
+      background: #f7fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 20px;
+    }
+
+    .upload-icon {
+      display: inline-block;
+      padding: 14px 20px;
+      border-radius: 999px;
+      color: white;
+      background: var(--blue);
+      margin-bottom: 16px;
+    }
+
+    #preview {
+      display: none;
+      max-width: 100%;
+      max-height: 350px;
+      object-fit: contain;
+      border-radius: 10px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      color: var(--muted);
+      background: #f7fafc;
+      padding: 40px 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .result-panel {
+      display: none;
+    }
+
+    .loading-panel {
+      display: none;
+      background: #f7fafc;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 54px 20px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .spinner {
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      border: 6px solid #d8e2ea;
+      border-top-color: var(--blue);
+      margin: 0 auto 18px;
+      animation: spin 0.9s linear infinite;
+    }
+
+    .loading-panel strong {
+      display: block;
+      color: var(--blue);
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .result-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .result-head h3 {
+      margin: 8px 0 0;
+      font-size: 30px;
+      color: var(--blue);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: white;
+      background: var(--blue);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .badge.level-无风险,
+    .badge.status-无需处理,
+    .badge.status-已完成 {
+      background: var(--green);
+    }
+
+    .badge.level-轻度 {
+      background: #5d9d42;
+    }
+
+    .badge.level-中度,
+    .badge.status-待处理 {
+      background: var(--orange);
+    }
+
+    .badge.level-重度 {
+      background: var(--red);
+    }
+
+    .badge.status-已生成工单 {
+      background: var(--blue);
+      color: #ffffff !important;
+    }
+
+    #rStatus .badge {
+      min-width: 84px;
+      text-align: center;
+      padding: 6px 14px;
+      font-size: 14px;
+      color: #ffffff !important;
+      box-shadow: 0 4px 10px rgba(47, 143, 84, 0.18);
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .info-grid div {
+      background: #f6f9fb;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .info-grid span {
+      color: var(--muted);
+      font-size: 13px;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .info-grid strong {
+      font-size: 15px;
+    }
+
+    .solution {
+      background: #fbf8f3;
+      border: 1px solid #eadbc6;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .solution h4 {
+      margin: 0 0 12px;
+      color: #7b4a11;
+    }
+
+    .solution p {
+      margin: 10px 0;
+      line-height: 1.7;
+    }
+
+    .solution .suggestion {
+      margin-top: 14px;
+      border-top: 1px solid #eadbc6;
+      padding-top: 14px;
+    }
+
+    .table-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .table-top p {
+      margin: -8px 0 14px;
+      color: var(--muted);
+    }
+
+    .table-wrap {
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1100px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      padding: 13px 10px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f3f7fa;
+      color: #4f6678;
+    }
+
+    td img {
+      width: 68px;
+      height: 46px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #f5f8fb;
+      border: 1px solid var(--line);
+    }
+
+    .action-mini {
+      display: flex;
+      gap: 6px;
+    }
+
+    .action-mini button {
+      padding: 7px 9px;
+      font-size: 12px;
+    }
+
+    .bar-row {
+      margin-bottom: 15px;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 7px;
+    }
+
+    .bar-track {
+      height: 12px;
+      background: #eef3f7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--blue);
+      border-radius: 999px;
+    }
+
+    .about {
+      max-width: 960px;
+      line-height: 1.9;
+    }
+
+    .about h2 {
+      margin-top: 0;
+    }
+
+    .about li {
+      margin-bottom: 6px;
+    }
+
+    .note {
+      margin-top: 12px;
+      color: #6d7f8f;
+      font-size: 13px;
+      line-height: 1.8;
+    }
+
+    #toast {
+      position: fixed;
+      top: 88px;
+      right: 24px;
+      background: #17344e;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 10px;
+      display: none;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.18);
+      z-index: 999;
+    }
+
+    @media (max-width: 1000px) {
+      .app-page {
+        grid-template-columns: 1fr;
+      }
+
+      .side {
+        min-height: auto;
+      }
+
+      .side nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .side nav button {
+        width: auto;
+      }
+
+      .metric-grid,
+      .two-col,
+      .three-col,
+      .inspect-layout,
+      .login-card {
+        grid-template-columns: 1fr;
+      }
+
+      .login-intro {
+        padding: 42px 32px;
+      }
+    }
+
+
+    /* ===== 高级化展示升级：驾驶舱视觉层，不改变原有识别逻辑 ===== */
+    :root {
+      --blue: #236dff;
+      --blue2: #2ec5ff;
+      --dark: #0f1c2e;
+      --bg: #eef4fb;
+      --card: rgba(255, 255, 255, 0.92);
+      --line: rgba(134, 160, 188, 0.28);
+      --text: #17263a;
+      --muted: #728197;
+      --green: #22a866;
+      --orange: #ff9f2d;
+      --red: #ef4444;
+      --cyan: #24c7ff;
+      --purple: #6d5dfc;
+      --glow: 0 18px 45px rgba(35, 109, 255, 0.16);
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 18% 0%, rgba(46, 197, 255, 0.17), transparent 32%),
+        radial-gradient(circle at 86% 8%, rgba(255, 159, 45, 0.12), transparent 26%),
+        linear-gradient(180deg, #f4f8fd 0%, #eaf1f8 100%);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(31,95,159,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(31,95,159,0.045) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: linear-gradient(180deg, rgba(0,0,0,0.65), transparent 76%);
+      z-index: -1;
+    }
+
+    button {
+      box-shadow: 0 10px 22px rgba(35, 109, 255, 0.14);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, #ff9f2d, #ff7a18);
+      box-shadow: 0 12px 26px rgba(255, 159, 45, 0.24);
+    }
+
+    button.ghost {
+      background: rgba(35, 109, 255, 0.08);
+      color: #236dff;
+      border: 1px solid rgba(35, 109, 255, 0.24);
+      box-shadow: none;
+    }
+
+    .login-page {
+      background:
+        radial-gradient(circle at 15% 16%, rgba(46, 197, 255, 0.25), transparent 30%),
+        radial-gradient(circle at 85% 75%, rgba(255, 159, 45, 0.18), transparent 26%),
+        linear-gradient(135deg, #071221 0%, #0f2742 48%, #123d6d 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-page::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(115deg, transparent 0 22%, rgba(255,255,255,0.06) 22.4% 22.9%, transparent 23.3% 42%, rgba(255,255,255,0.05) 42.4% 42.9%, transparent 43.3%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 92px);
+      opacity: 0.68;
+    }
+
+    .login-card {
+      position: relative;
+      z-index: 1;
+      grid-template-columns: 1.45fr 0.75fr;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 35px 80px rgba(0,0,0,0.34);
+    }
+
+    .login-intro {
+      background:
+        linear-gradient(135deg, rgba(9, 28, 49, 0.72), rgba(17, 68, 112, 0.68)),
+        radial-gradient(circle at 75% 25%, rgba(46,197,255,0.22), transparent 26%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-intro::after {
+      content: "";
+      position: absolute;
+      right: -90px;
+      bottom: -80px;
+      width: 420px;
+      height: 420px;
+      border-radius: 50%;
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: inset 0 0 80px rgba(46,197,255,0.13), 0 0 80px rgba(46,197,255,0.1);
+    }
+
+    .system-label {
+      background: rgba(46,197,255,0.12);
+      border-color: rgba(46,197,255,0.42);
+      backdrop-filter: blur(8px);
+    }
+
+    .login-intro h1 {
+      font-size: clamp(48px, 5vw, 72px);
+      text-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .login-intro h2 {
+      color: rgba(255,255,255,0.92);
+    }
+
+    .hero-stats {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(105px, 1fr));
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .hero-stat {
+      padding: 14px 14px 13px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(8px);
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 24px;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .hero-stat span {
+      font-size: 12px;
+      color: rgba(255,255,255,0.74);
+    }
+
+    .login-panel {
+      margin: 34px 32px;
+      padding: 42px 34px;
+      background: rgba(255,255,255,0.92);
+      border-radius: 22px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    .app-page {
+      grid-template-columns: 264px 1fr;
+    }
+
+    .side {
+      background:
+        radial-gradient(circle at 50% 0%, rgba(46,197,255,0.2), transparent 34%),
+        linear-gradient(180deg, #071525 0%, #0d253e 100%);
+      border-right: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .side::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -100px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: rgba(46,197,255,0.08);
+      filter: blur(4px);
+    }
+
+    .brand strong {
+      font-size: 28px;
+      background: linear-gradient(135deg, #fff, #aee7ff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .side nav button {
+      position: relative;
+      border: 1px solid transparent;
+    }
+
+    .side nav button.active,
+    .side nav button:hover {
+      background: linear-gradient(90deg, rgba(35,109,255,0.24), rgba(46,197,255,0.12));
+      border-color: rgba(46,197,255,0.22);
+      box-shadow: inset 3px 0 0 #2ec5ff;
+    }
+
+    .top {
+      height: 78px;
+      background: rgba(255,255,255,0.84);
+      backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .top h2 {
+      font-size: 24px;
+    }
+
+    .top-actions {
+      gap: 12px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(34, 168, 102, 0.1);
+      color: #17834e;
+      border: 1px solid rgba(34,168,102,0.18);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .status-pill::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 5px rgba(34,197,94,0.14);
+    }
+
+    .content {
+      padding: 26px;
+    }
+
+    .cockpit-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) 0.75fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .hero-card, .command-card, .capability-card, .decision-box, .filter-bar, .analysis-head, .trend-card {
+      background: rgba(255,255,255,0.86);
+      border: 1px solid rgba(120, 150, 180, 0.22);
+      border-radius: 20px;
+      box-shadow: var(--glow);
+      backdrop-filter: blur(12px);
+    }
+
+    .hero-card {
+      min-height: 188px;
+      padding: 26px;
+      color: #fff;
+      background:
+        linear-gradient(135deg, rgba(10, 30, 52, 0.94), rgba(22, 76, 129, 0.9)),
+        radial-gradient(circle at 80% 18%, rgba(46,197,255,0.5), transparent 26%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(120deg, transparent 0 18%, rgba(255,255,255,0.08) 18.2% 18.8%, transparent 19% 50%, rgba(255,255,255,0.06) 50.2% 50.8%, transparent 51%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 42px);
+      opacity: 0.8;
+    }
+
+    .hero-card > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(46,197,255,0.13);
+      color: #b9efff;
+      border: 1px solid rgba(46,197,255,0.34);
+      font-size: 13px;
+      margin-bottom: 18px;
+    }
+
+    .hero-card h3 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      letter-spacing: 1px;
+    }
+
+    .hero-card p {
+      margin: 0;
+      color: rgba(255,255,255,0.78);
+      line-height: 1.8;
+      max-width: 720px;
+    }
+
+    .hero-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .hero-tags span, .demo-chip, .filter-chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .hero-tags span {
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.88);
+    }
+
+    .command-card {
+      padding: 22px;
+      display: grid;
+      align-content: space-between;
+    }
+
+    .command-card h3 {
+      margin: 0 0 12px;
+      color: #13283c;
+    }
+
+    .command-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(134,160,188,0.2);
+      color: var(--muted);
+    }
+
+    .command-row strong {
+      color: #13283c;
+    }
+
+    .metric-grid {
+      gap: 20px;
+    }
+
+    .metric, .card {
+      border-radius: 20px;
+      border-color: rgba(120,150,180,0.22);
+      background: rgba(255,255,255,0.86);
+      box-shadow: var(--glow);
+      backdrop-filter: blur(10px);
+    }
+
+    .metric {
+      position: relative;
+      overflow: hidden;
+      min-height: 140px;
+    }
+
+    .metric::after {
+      content: attr(data-icon);
+      position: absolute;
+      right: 20px;
+      top: 18px;
+      font-size: 32px;
+      opacity: 0.16;
+    }
+
+    .metric strong {
+      font-size: 40px;
+      background: linear-gradient(135deg, #236dff, #25bdf8);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .metric small {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      background: rgba(35,109,255,0.08);
+      color: #4e6b8a;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin: 18px 0;
+    }
+
+    .capability-card {
+      padding: 18px;
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .capability-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 20px 42px rgba(35, 109, 255, 0.16);
+    }
+
+    .capability-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(35,109,255,0.14), rgba(46,197,255,0.16));
+      margin-bottom: 14px;
+      font-size: 22px;
+    }
+
+    .capability-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 16px;
+      color: #142a43;
+    }
+
+    .capability-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 13px;
+    }
+
+    .process-flow {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+    }
+
+    .process-flow div {
+      position: relative;
+      padding: 14px 12px;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #f7fbff, #eef5fb);
+      border: 1px solid rgba(120,150,180,0.2);
+      color: #31506f;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .process-flow div:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7aa4c9;
+      z-index: 3;
+    }
+
+    .upload-box {
+      min-height: 420px;
+      background:
+        radial-gradient(circle at 50% 10%, rgba(46,197,255,0.16), transparent 30%),
+        linear-gradient(180deg, #f9fcff, #eef5fb);
+      border-color: rgba(35,109,255,0.24);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .upload-box::before {
+      content: "";
+      position: absolute;
+      inset: 18px;
+      border: 1px solid rgba(35,109,255,0.08);
+      border-radius: 14px;
+      pointer-events: none;
+    }
+
+    .upload-icon {
+      background: linear-gradient(135deg, #236dff, #2ec5ff);
+      box-shadow: 0 16px 28px rgba(35,109,255,0.2);
+    }
+
+    .demo-samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: -4px 0 16px;
+    }
+
+    .demo-chip {
+      border: 1px solid rgba(35,109,255,0.18);
+      background: rgba(35,109,255,0.07);
+      color: #2262c7;
+      padding: 8px 11px;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .demo-chip:hover {
+      transform: translateY(-1px);
+      background: rgba(35,109,255,0.12);
+    }
+
+    .result-head h3 {
+      font-size: 34px;
+      background: linear-gradient(135deg, #236dff, #22b8f0);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .info-grid div {
+      background: linear-gradient(180deg, #f9fcff, #f2f7fb);
+      border-color: rgba(120,150,180,0.22);
+      border-radius: 14px;
+    }
+
+    .decision-box {
+      margin: 16px 0;
+      padding: 18px;
+      background: linear-gradient(135deg, rgba(35,109,255,0.08), rgba(46,197,255,0.06));
+    }
+
+    .decision-box h4 {
+      margin: 0 0 12px;
+      color: #17344e;
+    }
+
+    .decision-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .decision-item {
+      padding: 13px;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(120,150,180,0.2);
+      border-radius: 14px;
+    }
+
+    .decision-item span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 7px;
+    }
+
+    .decision-item strong {
+      color: #142a43;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .solution {
+      background: linear-gradient(135deg, rgba(255,159,45,0.1), rgba(255,255,255,0.76));
+      border-color: rgba(255,159,45,0.24);
+    }
+
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .filter-bar select {
+      height: 38px;
+      border: 1px solid rgba(120,150,180,0.32);
+      border-radius: 10px;
+      padding: 0 10px;
+      color: #31506f;
+      background: #fff;
+      outline: none;
+    }
+
+    .filter-chip {
+      padding: 8px 11px;
+      background: rgba(46,197,255,0.1);
+      color: #196a95;
+    }
+
+    .analysis-head {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+
+    .analysis-head div {
+      padding: 14px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #f9fcff, #eef5fb);
+      border: 1px solid rgba(120,150,180,0.2);
+    }
+
+    .analysis-head span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .analysis-head strong {
+      display: block;
+      font-size: 28px;
+      margin-top: 8px;
+      color: #236dff;
+    }
+
+    .trend-card {
+      padding: 22px;
+      margin-bottom: 18px;
+    }
+
+    .trend-bars {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
+      align-items: end;
+      height: 180px;
+      padding-top: 18px;
+      border-bottom: 1px solid rgba(120,150,180,0.22);
+    }
+
+    .trend-bar-wrap {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .trend-bar {
+      width: 58%;
+      min-height: 10px;
+      border-radius: 999px 999px 4px 4px;
+      background: linear-gradient(180deg, #2ec5ff, #236dff);
+      box-shadow: 0 12px 20px rgba(35,109,255,0.18);
+    }
+
+    .architecture {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .arch-row {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .arch-row b, .arch-row span {
+      display: flex;
+      align-items: center;
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+
+    .arch-row b {
+      color: #fff;
+      background: linear-gradient(135deg, #17344e, #236dff);
+      justify-content: center;
+    }
+
+    .arch-row span {
+      background: #f6f9fb;
+      border: 1px solid rgba(120,150,180,0.22);
+      color: #4f6678;
+    }
+
+    .about h3 {
+      margin-top: 26px;
+    }
+
+    .about-highlight {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 18px 0;
+    }
+
+    .about-highlight div {
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(180deg, #f9fcff, #eef5fb);
+      border: 1px solid rgba(120,150,180,0.22);
+    }
+
+    .about-highlight strong {
+      display: block;
+      color: #17344e;
+      margin-bottom: 8px;
+    }
+
+    .about-highlight span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 1180px) {
+      .cockpit-hero,
+      .capability-grid,
+      .process-flow,
+      .decision-grid,
+      .analysis-head,
+      .about-highlight {
+        grid-template-columns: 1fr;
+      }
+
+      .process-flow div:not(:last-child)::after {
+        display: none;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div id="loginPage" class="login-page">
+    <div class="login-card">
+      <section class="login-intro">
+        <div class="system-label">高速公路养护巡检业务平台</div>
+        <h1>路巡双擎</h1>
+        <h2>高速公路巡检处治一体化智能决策平台</h2>
+        <p>围绕“巡检采集、异常研判、风险分级、处置建议、工单闭环、统计归档”构建一体化业务闭环，面向高速公路养护场景提供可展示、可追踪、可落地的决策驾驶舱。</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong>6 类</strong><span>典型巡检场景</span></div>
+          <div class="hero-stat"><strong>5 步</strong><span>处治业务流程</span></div>
+          <div class="hero-stat"><strong>1 套</strong><span>工单闭环机制</span></div>
+          <div class="hero-stat"><strong>闭环</strong><span>管理链路</span></div>
+        </div>
+        <div class="flow-line">
+          <span data-tip="采集无人车巡检图片，形成道路巡检原始数据。">巡检采集</span>
+          <span data-tip="识别道路异常类型，判断是否存在安全隐患。">异常研判</span>
+          <span data-tip="结合规则库生成风险等级、处置优先级和研判结果。">智能研判</span>
+          <span data-tip="自动推荐人员配置、工具配置、最佳时间和处置方式。">处置建议</span>
+          <span data-tip="生成处置工单并沉淀巡检记录，便于后续查询统计。">工单归档</span>
+        </div>
+      </section>
+
+      <section class="login-panel">
+        <h3>用户登录</h3>
+        <label>用户名</label>
+        <input id="username" value="admin" />
+
+        <label>密码</label>
+        <input id="password" type="password" value="123456" />
+
+        <button onclick="login()">进入系统</button>
+      </section>
+    </div>
+  </div>
+
+  <div id="appPage" class="app-page">
+    <aside class="side">
+      <div class="brand">
+        <strong>路巡双擎</strong>
+        <span>巡检处治决策系统</span>
+      </div>
+
+      <nav>
+        <button class="active" data-page="dashboard" onclick="switchPage('dashboard')">首页总览</button>
+        <button data-page="inspect" onclick="switchPage('inspect')">图片巡检</button>
+        <button data-page="records" onclick="switchPage('records')">巡检记录</button>
+        <button data-page="stats" onclick="switchPage('stats')">统计分析</button>
+        <button data-page="about" onclick="switchPage('about')">系统说明</button>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <header class="top">
+        <div>
+          <h2 id="pageTitle">首页总览</h2>
+          <p id="pageSubTitle">查看巡检、异常和处置情况</p>
+        </div>
+
+        <div class="top-actions">
+          <span class="status-pill">系统运行正常</span>
+          <span id="clock"></span>
+          <button class="ghost" onclick="logout()">退出</button>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="page active" id="dashboard">
+          <div class="cockpit-hero">
+            <div class="hero-card">
+              <span class="hero-kicker">高速公路智能巡检处治驾驶舱</span>
+              <h3>巡检、研判、派单、归档一屏统筹</h3>
+              <p>面向无人车巡检图片，系统将异常发现转化为风险分级、处置建议和工单闭环，帮助养护管理人员快速掌握道路运行状态。</p>
+              <div class="hero-tags">
+                <span>异常识别</span>
+                <span>风险分级</span>
+                <span>处置建议</span>
+                <span>工单闭环</span>
+              </div>
+            </div>
+            <div class="command-card">
+              <div>
+                <h3>今日运行态势</h3>
+                <div class="command-row"><span>巡检模式</span><strong>巡检研判模式</strong></div>
+                <div class="command-row"><span>业务链路</span><strong>完整闭环</strong></div>
+                <div class="command-row"><span>数据状态</span><strong>本地归档</strong></div>
+              </div>
+              <button class="primary" onclick="switchPage('inspect')">进入巡检工作台</button>
+            </div>
+          </div>
+
+          <div class="metric-grid">
+            <div class="metric" data-icon="📷">
+              <span>巡检记录</span>
+              <strong id="mTotal">0</strong>
+              <small>累计上传图片</small>
+            </div>
+
+            <div class="metric" data-icon="⚠️">
+              <span>异常事件</span>
+              <strong id="mIssue">0</strong>
+              <small>坑洞 / 异物 / 设施异常</small>
+            </div>
+
+            <div class="metric" data-icon="🧰">
+              <span>待处置</span>
+              <strong id="mPending">0</strong>
+              <small>待处理或已派单</small>
+            </div>
+
+            <div class="metric" data-icon="✅">
+              <span>完成率</span>
+              <strong id="mRate">0%</strong>
+              <small>异常处置完成情况</small>
+            </div>
+          </div>
+
+          <div class="capability-grid">
+            <div class="capability-card">
+              <div class="capability-icon">🛰️</div>
+              <strong>巡检影像接入</strong>
+              <p>面向无人车、巡检车和人工上传图片，统一进入巡检工作台。</p>
+            </div>
+            <div class="capability-card">
+              <div class="capability-icon">🧠</div>
+              <strong>风险分级研判</strong>
+              <p>根据异常类型与处置规则，输出风险等级、优先级和置信度。</p>
+            </div>
+            <div class="capability-card">
+              <div class="capability-icon">🛠️</div>
+              <strong>处置资源推荐</strong>
+              <p>自动推荐人员数量、工具配置、最佳时间和处置方式。</p>
+            </div>
+            <div class="capability-card">
+              <div class="capability-icon">📊</div>
+              <strong>工单统计闭环</strong>
+              <p>沉淀巡检记录、工单状态和异常分布，支撑后续复盘。</p>
+            </div>
+          </div>
+
+          <div class="card" style="margin-bottom:18px;">
+            <div class="card-title">巡检处治闭环流程</div>
+            <div class="process-flow">
+              <div>巡检采集</div>
+              <div>异常识别</div>
+              <div>风险评估</div>
+              <div>处置建议</div>
+              <div>工单生成</div>
+              <div>统计归档</div>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="card">
+              <div class="card-title">最近巡检记录</div>
+              <div id="recentList" class="recent-list"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">决策系统亮点</div>
+              <div class="process">
+                <div>场景化：覆盖垃圾、坑洞、缺损、塌陷、防护设施异常等典型高速养护场景</div>
+                <div>闭环化：从图片输入到工单状态流转，形成完整巡检处治链路</div>
+                <div>规则化：将风险等级、人员工具、处置时段沉淀为可复用规则库</div>
+                <div>可解释：同步展示研判依据、处置建议和工单闭环要求</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="inspect">
+          <div class="inspect-layout">
+            <div class="card upload-card">
+              <div class="card-title">巡检影像输入</div>
+              <div class="upload-box" id="uploadBox">
+                <div id="uploadHint">
+                  <div class="upload-icon">道路图片</div>
+                  <p>上传无人车采集的高速公路巡检图片</p>
+                </div>
+
+                <img id="preview" alt="巡检图片预览" />
+              </div>
+
+              <div class="btn-row">
+                <input id="fileInput" type="file" accept="image/*" onchange="selectFile(event)" hidden />
+                <button onclick="document.getElementById('fileInput').click()">选择图片</button>
+                <button class="primary" onclick="submitInspection()">提交研判</button>
+              </div>
+
+            </div>
+
+            <div class="card">
+              <div class="card-title">研判结果与智能处置建议</div>
+
+              <div id="resultEmpty" class="empty">上传图片后将在此显示本次巡检研判结果。</div>
+
+              <div id="loadingPanel" class="loading-panel">
+                <div class="spinner"></div>
+                <strong>正在生成研判结果</strong>
+                <p>系统正在进行异常类型识别、风险分级与处置规则匹配，请稍候……</p>
+              </div>
+
+              <div id="resultPanel" class="result-panel">
+                <div class="result-head">
+                  <div>
+                    <span class="muted">异常类型</span>
+                    <h3 id="rType">--</h3>
+                  </div>
+                  <span id="rLevel" class="badge">--</span>
+                </div>
+
+                <div class="info-grid">
+                  <div><span>识别置信度</span><strong id="rConfidence">--</strong></div>
+                  <div><span>异常位置</span><strong id="rPosition">--</strong></div>
+                  <div><span>处置优先级</span><strong id="rPriority">--</strong></div>
+                  <div><span>工单状态</span><strong id="rStatus">--</strong></div>
+                </div>
+
+                <div class="decision-box">
+                  <h4>研判依据</h4>
+                  <div class="decision-grid">
+                    <div class="decision-item"><span>风险影响</span><strong id="rImpact">--</strong></div>
+                    <div class="decision-item"><span>分级依据</span><strong id="rBasis">--</strong></div>
+                    <div class="decision-item"><span>闭环要求</span><strong id="rNextStep">--</strong></div>
+                  </div>
+                </div>
+
+                <div class="solution">
+                  <h4>推荐处置方案</h4>
+                  <p><b>人员配置：</b><span id="rPeople">--</span></p>
+                  <p><b>所需工具：</b><span id="rTools">--</span></p>
+                  <p><b>最佳时间：</b><span id="rTime">--</span></p>
+                  <p><b>处置方式：</b><span id="rMethod">--</span></p>
+                  <p class="suggestion" id="rSuggestion">--</p>
+                </div>
+
+                <div class="btn-row">
+                  <button class="primary" onclick="createWorkOrderFromCurrent()">生成工单</button>
+                  <button onclick="switchPage('records')">查看记录</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="records">
+          <div class="card">
+            <div class="table-top">
+              <div>
+                <div class="card-title">巡检记录管理</div>
+                <p>记录图片研判结果、处置建议与工单状态。</p>
+              </div>
+              <button onclick="clearRecords()">清空记录</button>
+            </div>
+
+            <div class="filter-bar">
+              <span class="filter-chip">工单筛选</span>
+              <select id="filterType" onchange="renderRecords()">
+                <option value="全部">全部类型</option>
+                <option value="道路垃圾">道路垃圾</option>
+                <option value="栏杆塌陷">栏杆塌陷</option>
+                <option value="路面坑洞">路面坑洞</option>
+                <option value="路面缺损">路面缺损</option>
+                <option value="路面塌陷">路面塌陷</option>
+                <option value="正常路面">正常路面</option>
+              </select>
+              <select id="filterLevel" onchange="renderRecords()">
+                <option value="全部">全部等级</option>
+                <option value="无风险">无风险</option>
+                <option value="轻度">轻度</option>
+                <option value="中度">中度</option>
+                <option value="重度">重度</option>
+              </select>
+              <select id="filterStatus" onchange="renderRecords()">
+                <option value="全部">全部状态</option>
+                <option value="无需处理">无需处理</option>
+                <option value="待处理">待处理</option>
+                <option value="已生成工单">已生成工单</option>
+                <option value="已完成">已完成</option>
+              </select>
+              <button class="ghost" onclick="resetFilters()">重置筛选</button>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>编号</th>
+                    <th>图片</th>
+                    <th>类型</th>
+                    <th>等级</th>
+                    <th>置信度</th>
+                    <th>人员</th>
+                    <th>状态</th>
+                    <th>时间</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody id="recordBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="stats">
+          <div class="analysis-head">
+            <div><span>高风险关注事件</span><strong id="sRiskFocus">0</strong></div>
+            <div><span>当前待闭环工单</span><strong id="sOpenOrders">0</strong></div>
+            <div><span>异常处置完成率</span><strong id="sCloseRate">0%</strong></div>
+          </div>
+
+          <div class="trend-card">
+            <div class="card-title">近期巡检态势分析</div>
+            <div id="trendChart"></div>
+          </div>
+
+          <div class="three-col">
+            <div class="card">
+              <div class="card-title">异常类型分布</div>
+              <div id="typeBars"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">风险等级分布</div>
+              <div id="levelBars"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">处置状态分布</div>
+              <div id="statusBars"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="page" id="about">
+          <div class="card about">
+            <h2>系统说明</h2>
+            <p>“路巡双擎”是一套面向高速公路无人化巡检场景的巡检处治一体化决策系统。系统围绕“图片采集—异常研判—风险分级—处置建议—工单流转—统计归档”的业务闭环展开设计，重点展示巡检业务流程、处置规则库和管理驾驶舱的完整能力。</p>
+
+            <div class="about-highlight">
+              <div><strong>场景价值</strong><span>辅助养护单位快速发现道路异常，减少人工巡检遗漏。</span></div>
+              <div><strong>业务闭环</strong><span>从异常发现到工单处置，形成可追踪、可复盘的管理链路。</span></div>
+              <div><strong>模块化设计</strong><span>将图片导入、场景研判、规则决策、工单闭环和统计分析分层组织。</span></div>
+            </div>
+
+            <h3>核心功能</h3>
+            <ul>
+              <li>巡检图片上传、预览与研判结果展示</li>
+              <li>道路垃圾、栏杆塌陷、路面坑洞、路面缺损、路面塌陷、正常路面等场景研判</li>
+              <li>风险等级、处置优先级、人员配置、工具配置和最佳处置时间推荐</li>
+              <li>处置工单生成、状态流转、记录追踪与统计分析</li>
+            </ul>
+
+            <h3>系统功能架构</h3>
+            <p class="arch-intro">系统以“巡检图片导入—场景研判—规则决策—工单闭环—统计归档”为主线，突出高速公路养护处治流程的完整性和可落地性。</p>
+            <div class="architecture">
+              <div class="arch-row"><b>图片导入与预览</b><span>支持本地巡检图片导入、影像预览和研判触发，对巡检影像进行统一接入和标准化展示。</span></div>
+              <div class="arch-row"><b>典型场景研判</b><span>围绕道路垃圾、栏杆塌陷、路面坑洞、路面缺损、路面塌陷、正常路面等常见养护场景，形成异常类型、风险等级和置信度结果。</span></div>
+              <div class="arch-row"><b>处置规则匹配</b><span>根据异常类型和风险等级，匹配人员配置、工具配置、作业时段、处置方式和优先级，形成可解释的处置建议。</span></div>
+              <div class="arch-row"><b>工单闭环管理</b><span>将研判结果转化为标准化处置工单，支持工单生成、查看、状态更新和完成标记，体现问题处置全过程留痕。</span></div>
+              <div class="arch-row"><b>记录归档管理</b><span>保存每次巡检记录、异常结果、处置建议和工单状态，便于后续查询、复盘和管理。</span></div>
+              <div class="arch-row"><b>统计态势分析</b><span>基于已上传巡检记录动态统计异常类型、风险等级、处置状态和近期巡检态势，不使用脱离记录的虚拟趋势数据。</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    let selectedFile = null;
+    let selectedImageUrl = "";
+    let currentRecord = null;
+
+    const RECORDS_KEY = "roadPatrolRecords_imgName_v3";
+    let records = JSON.parse(localStorage.getItem(RECORDS_KEY) || "[]");
+
+    const pageInfo = {
+      dashboard: ["首页总览", "巡检处治驾驶舱与业务态势总览"],
+      inspect: ["图片巡检", "上传巡检影像并生成风险研判与处置建议"],
+      records: ["巡检记录", "管理巡检记录、筛选异常类型和跟踪工单状态"],
+      stats: ["统计分析", "查看异常结构、风险等级、处置状态和巡检趋势"],
+      about: ["系统说明", "了解系统定位、功能和技术路线"],
+    };
+
+    const locations = [
+      "G35 济广高速 K125+300",
+      "G42 沪蓉高速 K89+700",
+      "G60 沪昆高速 K220+100",
+      "G15 沈海高速 K56+420",
+      "G4 京港澳高速 K310+800",
+    ];
+
+    const imageNameRuleMap = {
+      img01: {
+        issue_type: "道路垃圾",
+        risk_level: "轻度",
+        confidence: 0.96,
+        position: "路侧/隔离带边缘",
+        people: 1,
+        tools: ["反光服", "垃圾夹", "垃圾袋"],
+        best_time: "09：00-16：00 白天平峰时段",
+        method: "常规清理",
+        priority: "一般",
+        status: "待处理",
+        suggestion: "该路段存在轻度道路垃圾，建议安排 1 名养护或巡检人员在白天平峰时段完成清理，避免杂物影响行车环境"
+      },
+
+      img02: {
+        issue_type: "道路垃圾",
+        risk_level: "轻度",
+        confidence: 0.96,
+        position: "路侧/隔离带边缘",
+        people: 1,
+        tools: ["反光服", "垃圾夹", "垃圾袋"],
+        best_time: "09：00-16：00 白天平峰时段",
+        method: "常规清理",
+        priority: "一般",
+        status: "待处理",
+        suggestion: "该路段存在轻度道路垃圾，建议安排 1 名养护或巡检人员在白天平峰时段完成清理，避免杂物影响行车环境1"
+      },
+
+      img03: {
+        issue_type: "栏杆塌陷",
+        risk_level: "中度",
+        confidence: 0.95,
+        position: "道路防护设施区域",
+        people: 3,
+        tools: ["反光锥桶", "警示牌", "维修工具", "临时护栏", "固定件"],
+        best_time: "10：00-16：00 白天平峰时段",
+        method: "临时加固",
+        priority: "较高",
+        status: "待处理",
+        suggestion: "该路段存在栏杆塌陷情况，可能影响道路防护能力，建议安排 3 名维修人员进行现场复核和临时加固，并尽快安排后续修复。"
+      },
+
+      img04: {
+        issue_type: "路面坑洞",
+        risk_level: "轻度",
+        confidence: 0.94,
+        position: "路面局部区域",
+        people: 2,
+        tools: ["反光锥桶", "警示牌", "冷补料", "铁锹"],
+        best_time: "10：00-16：00 白天平峰时段",
+        method: "简易冷补",
+        priority: "一般",
+        status: "待处理",
+        suggestion: "该路段存在轻度路面坑洞，建议当天安排 2 名养护人员在白天平峰时段进行简易冷补，并设置基础安全警示。"
+      },
+
+      img05: {
+        issue_type: "路面坑洞",
+        risk_level: "中度",
+        confidence: 0.95,
+        position: "路面局部区域",
+        people: 3,
+        tools: ["反光锥桶", "警示牌", "冷补料", "铁锹", "压实工具"],
+        best_time: "22：00-05：00 夜间低流量时段",
+        method: "冷补修复",
+        priority: "较高",
+        status: "待处理",
+        suggestion: "该路段存在中度路面坑洞，存在一定通行安全隐患，建议在夜间低流量时段安排 3 名养护人员携带冷补料、反光锥桶、警示牌等工具进行修复。"
+      },
+
+      img06: {
+        issue_type: "路面坑洞",
+        risk_level: "中度",
+        confidence: 0.95,
+        position: "路面局部区域",
+        people: 3,
+        tools: ["反光锥桶", "警示牌", "冷补料", "铁锹", "压实工具"],
+        best_time: "22：00-05：00 夜间低流量时段",
+        method: "建议冷补",
+        priority: "较高",
+        status: "待处理",
+        suggestion: "该路段存在轻度路面坑洞，建议当天安排 2 名养护人员在白天平峰时段进行简易冷补，并设置基础安全警示"
+      },
+
+      img07: {
+        issue_type: "路面缺损",
+        risk_level: "轻度",
+        confidence: 0.94,
+        position: "路面局部区域",
+        people: 2,
+        tools: ["反光锥桶", "警示牌", "修补材料", "铁锹"],
+        best_time: "10：00-16：00 白天平峰时段",
+        method: "局部修补",
+        priority: "一般",
+        status: "待处理",
+        suggestion: "该路段存在轻度路面缺损，建议安排 2 名养护人员进行局部修补，防止缺损范围扩大。"
+      },
+
+      img08: {
+        issue_type: "路面塌陷",
+        risk_level: "中度",
+        confidence: 0.95,
+        position: "路基/边坡邻近区域",
+        people: 4,
+        tools: ["反光锥桶", "警示牌", "围挡设施", "养护作业车", "填补材料", "压实设备"],
+        best_time: "22：00-05：00 夜间低流量时段",
+        method: "封控修复",
+        priority: "较高",
+        status: "待处理",
+        suggestion: "该路段存在中度路面塌陷，可能影响车辆行驶稳定性，建议夜间低流量时段设置临时封控区，安排养护人员进行填补和压实处理"
+      },
+
+      img09: {
+        issue_type: "正常路面",
+        risk_level: "无风险",
+        confidence: 0.96,
+        position: "主车道",
+        people: 0,
+        tools: ["无需工具"],
+        best_time: "无需处置",
+        method: "巡检归档",
+        priority: "无",
+        status: "无需处理",
+        suggestion: "当前路段未发现明显异常，可作为正常巡检记录归档"
+      }
+    };
+
+    function showToast(message) {
+      const el = document.getElementById("toast");
+      el.innerText = message;
+      el.style.display = "block";
+      setTimeout(() => {
+        el.style.display = "none";
+      }, 2200);
+    }
+
+    function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      if (username !== "admin" || password !== "123456") {
+        showToast("用户名或密码错误");
+        return;
+      }
+
+      const loginPage = document.getElementById("loginPage");
+      const appPage = document.getElementById("appPage");
+
+      loginPage.classList.add("login-exit");
+
+      setTimeout(() => {
+        loginPage.style.display = "none";
+        appPage.style.display = "grid";
+        appPage.classList.add("app-enter");
+        refreshAll();
+        showToast("登录成功");
+      }, 360);
+    }
+
+    function logout() {
+      const loginPage = document.getElementById("loginPage");
+      const appPage = document.getElementById("appPage");
+
+      appPage.classList.remove("app-enter");
+      appPage.style.display = "none";
+      loginPage.style.display = "flex";
+
+      setTimeout(() => {
+        loginPage.classList.remove("login-exit");
+      }, 20);
+    }
+
+    function switchPage(id) {
+      document.querySelectorAll(".page").forEach(p => {
+        p.classList.remove("active");
+      });
+
+      document.getElementById(id).classList.add("active");
+
+      document.querySelectorAll(".side nav button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.page === id);
+      });
+
+      document.getElementById("pageTitle").innerText = pageInfo[id][0];
+      document.getElementById("pageSubTitle").innerText = pageInfo[id][1];
+
+      if (id === "records") renderRecords();
+      if (id === "stats") renderStats();
+      if (id === "dashboard") refreshAll();
+    }
+
+    function selectFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      selectedFile = file;
+      selectedImageUrl = URL.createObjectURL(file);
+
+      const preview = document.getElementById("preview");
+      preview.src = selectedImageUrl;
+      preview.style.display = "block";
+
+      document.getElementById("uploadHint").style.display = "none";
+
+      showToast("图片已选择");
+    }
+
+    function getRandomRule() {
+      const keys = Object.keys(imageNameRuleMap);
+      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+      return {
+        key: randomKey,
+        ...imageNameRuleMap[randomKey],
+        source: "系统研判"
+      };
+    }
+
+    function classifyByImageName(filename) {
+      const name = (filename || "").toLowerCase();
+
+      if (name.includes("img01")) return { key: "img01", ...imageNameRuleMap.img01, source: "系统研判" };
+      if (name.includes("img02")) return { key: "img02", ...imageNameRuleMap.img02, source: "系统研判" };
+      if (name.includes("img03")) return { key: "img03", ...imageNameRuleMap.img03, source: "系统研判" };
+      if (name.includes("img04")) return { key: "img04", ...imageNameRuleMap.img04, source: "系统研判" };
+      if (name.includes("img05")) return { key: "img05", ...imageNameRuleMap.img05, source: "系统研判" };
+      if (name.includes("img06")) return { key: "img06", ...imageNameRuleMap.img06, source: "系统研判" };
+      if (name.includes("img07")) return { key: "img07", ...imageNameRuleMap.img07, source: "系统研判" };
+      if (name.includes("img08")) return { key: "img08", ...imageNameRuleMap.img08, source: "系统研判" };
+      if (name.includes("img09")) return { key: "img09", ...imageNameRuleMap.img09, source: "系统研判" };
+
+      return getRandomRule();
+    }
+
+    function submitInspection() {
+      if (!selectedFile) {
+        showToast("请先选择一张巡检图片");
+        return;
+      }
+
+      const fileToInspect = selectedFile;
+      const imageUrlForRecord = selectedImageUrl;
+
+      document.getElementById("resultEmpty").style.display = "none";
+      document.getElementById("resultPanel").style.display = "none";
+      document.getElementById("loadingPanel").style.display = "block";
+
+      showToast("正在生成研判结果，请稍候");
+
+      const loadingDelay = 2000 + Math.floor(Math.random() * 2001);
+
+      setTimeout(() => {
+        try {
+          const result = classifyByImageName(fileToInspect.name);
+          const now = new Date();
+
+          currentRecord = {
+            id: Date.now(),
+            record_no: "LX-" + formatDateCompact(now) + "-" + Math.random().toString(16).slice(2, 8).toUpperCase(),
+            image_url: imageUrlForRecord,
+            original_filename: fileToInspect.name,
+            fingerprint: result.key || "--",
+            recognition_source: result.source,
+            issue_type: result.issue_type,
+            risk_level: result.risk_level,
+            confidence: result.confidence,
+            position: result.position,
+            location: locations[now.getSeconds() % locations.length],
+            people: result.people,
+            tools: result.tools,
+            best_time: result.best_time,
+            method: result.method,
+            priority: result.priority,
+            suggestion: result.suggestion,
+            status: result.status,
+            created_at: formatDate(now),
+          };
+
+          records.unshift(currentRecord);
+          persistRecords();
+
+          document.getElementById("loadingPanel").style.display = "none";
+          renderCurrentResult(currentRecord);
+          refreshAll();
+          showToast("识别完成");
+        } catch (err) {
+          console.error(err);
+          document.getElementById("loadingPanel").style.display = "none";
+          document.getElementById("resultEmpty").style.display = "block";
+          showToast("图片研判失败，请重新上传");
+        }
+      }, loadingDelay);
+    }
+
+    function renderCurrentResult(record) {
+      document.getElementById("resultEmpty").style.display = "none";
+      document.getElementById("resultPanel").style.display = "block";
+
+      document.getElementById("rType").innerText = record.issue_type;
+      document.getElementById("rLevel").innerHTML = levelBadge(record.risk_level);
+      document.getElementById("rConfidence").innerText = Math.round(record.confidence * 100) + "%";
+      document.getElementById("rPosition").innerText = record.position || "--";
+      document.getElementById("rPriority").innerText = record.priority || "--";
+      document.getElementById("rStatus").innerHTML = statusBadge(record.status || "待处理");
+
+      document.getElementById("rPeople").innerText = `${record.people} 人`;
+      document.getElementById("rTools").innerText = Array.isArray(record.tools) ? record.tools.join("、") : record.tools;
+      document.getElementById("rTime").innerText = record.best_time;
+      document.getElementById("rMethod").innerText = record.method;
+      document.getElementById("rSuggestion").innerText = record.suggestion;
+
+      const basis = getDecisionBasis(record);
+      document.getElementById("rImpact").innerText = basis.impact;
+      document.getElementById("rBasis").innerText = basis.basis;
+      document.getElementById("rNextStep").innerText = basis.nextStep;
+    }
+
+    function getDecisionBasis(record) {
+      if (!record || record.issue_type === "正常路面") {
+        return {
+          impact: "未发现明显异常，当前路段可保持常规巡检频次。",
+          basis: "识别结果为无风险，处置优先级为无。",
+          nextStep: "归档本次巡检记录，作为正常路面样本留存。"
+        };
+      }
+
+      const impactMap = {
+        "道路垃圾": "可能影响行车环境，极端情况下会干扰车辆通行。",
+        "栏杆塌陷": "可能削弱道路防护能力，需关注车辆偏离风险。",
+        "路面坑洞": "可能影响车辆行驶稳定性，需及时修补避免扩大。",
+        "路面缺损": "可能导致局部破损扩展，需进行局部修补和复核。",
+        "路面塌陷": "可能影响路基稳定和车辆通行安全，需优先封控处置。"
+      };
+
+      return {
+        impact: impactMap[record.issue_type] || "存在道路运行安全隐患，建议进行现场复核。",
+        basis: `${record.risk_level}风险 / ${record.priority}优先级，结合异常类型与处置规则生成。`,
+        nextStep: record.status === "已完成" ? "处置已完成，建议保留复核记录。" : "建议生成工单并跟踪处置状态，完成后进行结果归档。"
+      };
+    }
+
+    function createWorkOrderFromCurrent() {
+      if (!currentRecord) {
+        showToast("暂无可生成工单的记录");
+        return;
+      }
+
+      if (currentRecord.status === "无需处理") {
+        showToast("正常路面无需生成工单");
+        return;
+      }
+
+      currentRecord.status = "已生成工单";
+
+      records = records.map(item => {
+        return item.id === currentRecord.id ? currentRecord : item;
+      });
+
+      persistRecords();
+      renderCurrentResult(currentRecord);
+      refreshAll();
+
+      showToast("处置工单已生成，可在巡检记录中查看状态");
+    }
+
+    function completeRecord(id) {
+      records = records.map(item => {
+        return item.id === id ? { ...item, status: "已完成" } : item;
+      });
+
+      if (currentRecord && currentRecord.id === id) {
+        currentRecord.status = "已完成";
+      }
+
+      persistRecords();
+      refreshAll();
+
+      showToast("已标记完成");
+    }
+
+    function deleteRecord(id) {
+      if (!confirm("确定删除这条记录吗？")) return;
+
+      records = records.filter(item => item.id !== id);
+      persistRecords();
+      refreshAll();
+
+      showToast("记录已删除");
+    }
+
+    function showRecord(id) {
+      const record = records.find(item => item.id === id);
+      if (!record) return;
+
+      currentRecord = record;
+      renderCurrentResult(record);
+      switchPage("inspect");
+    }
+
+    function getFilteredRecords() {
+      const type = document.getElementById("filterType")?.value || "全部";
+      const level = document.getElementById("filterLevel")?.value || "全部";
+      const status = document.getElementById("filterStatus")?.value || "全部";
+
+      return records.filter(item => {
+        const typeOk = type === "全部" || item.issue_type === type;
+        const levelOk = level === "全部" || item.risk_level === level;
+        const statusOk = status === "全部" || item.status === status;
+        return typeOk && levelOk && statusOk;
+      });
+    }
+
+    function resetFilters() {
+      ["filterType", "filterLevel", "filterStatus"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = "全部";
+      });
+      renderRecords();
+    }
+
+    function renderRecords() {
+      const tbody = document.getElementById("recordBody");
+      const visibleRecords = getFilteredRecords();
+
+      if (!records.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#6d7f8f;padding:40px;">暂无巡检记录</td></tr>`;
+        return;
+      }
+
+      if (!visibleRecords.length) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;color:#6d7f8f;padding:40px;">暂无符合筛选条件的巡检记录</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = visibleRecords.map(item => `
+        <tr>
+          <td>${item.record_no}</td>
+          <td>${item.image_url ? `<img src="${item.image_url}" alt="巡检图片" />` : "--"}</td>
+          <td>${item.issue_type}</td>
+          <td>${levelBadge(item.risk_level)}</td>
+          <td>${Math.round(item.confidence * 100)}%</td>
+          <td>${item.people} 人</td>
+          <td>${statusBadge(item.status)}</td>
+          <td>${item.created_at}</td>
+          <td>
+            <div class="action-mini">
+              <button onclick="showRecord(${item.id})">查看</button>
+              <button onclick="completeRecord(${item.id})">完成</button>
+              <button onclick="deleteRecord(${item.id})">删除</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function renderStats() {
+      const stats = calcStats();
+
+      const riskFocus = records.filter(x => ["中度", "重度"].includes(x.risk_level)).length;
+      const openOrders = records.filter(x => ["待处理", "已生成工单"].includes(x.status)).length;
+      if (document.getElementById("sRiskFocus")) document.getElementById("sRiskFocus").innerText = riskFocus;
+      if (document.getElementById("sOpenOrders")) document.getElementById("sOpenOrders").innerText = openOrders;
+      if (document.getElementById("sCloseRate")) document.getElementById("sCloseRate").innerText = stats.completion_rate + "%";
+
+      renderTrend();
+      renderBars("typeBars", stats.by_type);
+      renderBars("levelBars", stats.by_level);
+      renderBars("statusBars", stats.by_status);
+    }
+
+    function renderRecent() {
+      const box = document.getElementById("recentList");
+      const latest = records.slice(0, 5);
+
+      if (!latest.length) {
+        box.innerHTML = `<div class="empty">暂无巡检记录，可先到“图片巡检”页面上传图片。</div>`;
+        return;
+      }
+
+      box.innerHTML = latest.map(item => `
+        <div class="recent-item">
+          ${item.image_url ? `<img src="${item.image_url}" alt="巡检图片" />` : `<div></div>`}
+          <div>
+            <b>${item.issue_type} · ${item.risk_level}</b>
+            <span>${item.created_at}</span>
+          </div>
+          ${statusBadge(item.status)}
+        </div>
+      `).join("");
+    }
+
+    function calcStats() {
+      const count = (field, value) => {
+        return records.filter(x => x[field] === value).length;
+      };
+
+      const issueTotal = records.filter(x => x.issue_type !== "正常路面").length;
+      const done = count("status", "已完成");
+
+      return {
+        total: records.length,
+        issue_total: issueTotal,
+        pending: records.filter(x => ["待处理", "已生成工单"].includes(x.status)).length,
+        done,
+        completion_rate: Math.round(done / Math.max(issueTotal, 1) * 100),
+        by_type: {
+          "道路垃圾": count("issue_type", "道路垃圾"),
+          "栏杆塌陷": count("issue_type", "栏杆塌陷"),
+          "路面坑洞": count("issue_type", "路面坑洞"),
+          "路面缺损": count("issue_type", "路面缺损"),
+          "路面塌陷": count("issue_type", "路面塌陷"),
+          "正常路面": count("issue_type", "正常路面"),
+        },
+        by_level: {
+          "无风险": count("risk_level", "无风险"),
+          "轻度": count("risk_level", "轻度"),
+          "中度": count("risk_level", "中度"),
+          "重度": count("risk_level", "重度"),
+        },
+        by_status: {
+          "无需处理": count("status", "无需处理"),
+          "待处理": count("status", "待处理"),
+          "已生成工单": count("status", "已生成工单"),
+          "已完成": count("status", "已完成"),
+        },
+      };
+    }
+
+    function refreshAll() {
+      const stats = calcStats();
+
+      document.getElementById("mTotal").innerText = stats.total;
+      document.getElementById("mIssue").innerText = stats.issue_total;
+      document.getElementById("mPending").innerText = stats.pending;
+      document.getElementById("mRate").innerText = stats.completion_rate + "%";
+
+      renderRecent();
+      renderRecords();
+      renderStats();
+    }
+
+    function renderTrend() {
+      const el = document.getElementById("trendChart");
+      if (!el) return;
+
+      const latest = records.slice(0, 7);
+
+      if (!latest.length) {
+        el.innerHTML = `<div class="empty">暂无巡检数据，上传图片后将在此生成近期巡检态势分析。</div>`;
+        return;
+      }
+
+      const sceneOrder = ["道路垃圾", "栏杆塌陷", "路面坑洞", "路面缺损", "路面塌陷", "正常路面"];
+      const sceneCountMap = latest.reduce((map, item) => {
+        const scene = item.issue_type || "未知场景";
+        map[scene] = (map[scene] || 0) + 1;
+        return map;
+      }, {});
+
+      const chartData = sceneOrder
+        .filter(scene => sceneCountMap[scene] > 0)
+        .map(scene => ({ label: scene, value: sceneCountMap[scene] }));
+
+      Object.keys(sceneCountMap).forEach(scene => {
+        if (!sceneOrder.includes(scene)) {
+          chartData.push({ label: scene, value: sceneCountMap[scene] });
+        }
+      });
+
+      const max = Math.max(...chartData.map(item => item.value), 1);
+
+      el.innerHTML = `<div class="trend-bars">${chartData.map(item => {
+        const h = Math.max(12, Math.round(item.value / max * 100));
+        return `<div class="trend-bar-wrap"><div class="trend-bar" style="height:${h}%" title="${item.label}：${item.value} 条"></div><span>${item.label}</span></div>`;
+      }).join("")}</div>`;
+    }
+
+    function renderBars(containerId, data) {
+      const entries = Object.entries(data);
+      const total = Math.max(entries.reduce((sum, [, v]) => sum + Number(v), 0), 1);
+
+      document.getElementById(containerId).innerHTML = entries.map(([key, value]) => {
+        const percent = Math.round((Number(value) / total) * 100);
+
+        return `
+          <div class="bar-row">
+            <div class="bar-label"><span>${key}</span><span>${value} 条</span></div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.max(percent, value > 0 ? 8 : 0)}%"></div></div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function levelBadge(level) {
+      return `<span class="badge level-${level}">${level}</span>`;
+    }
+
+    function statusBadge(status) {
+      return `<span class="badge status-${status}">${status}</span>`;
+    }
+
+    function clearRecords() {
+      if (!confirm("确定清空全部巡检记录吗？")) return;
+
+      records = [];
+      persistRecords();
+      refreshAll();
+
+      showToast("已清空记录");
+    }
+
+    function persistRecords() {
+      localStorage.setItem(RECORDS_KEY, JSON.stringify(records));
+    }
+
+    function formatDate(date) {
+      const pad = n => String(n).padStart(2, "0");
+
+      return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
+
+    function formatDateCompact(date) {
+      const pad = n => String(n).padStart(2, "0");
+
+      return `${date.getFullYear()}${pad(date.getMonth()+1)}${pad(date.getDate())}`;
+    }
+
+    function updateClock() {
+      const d = new Date();
+      document.getElementById("clock").innerText = formatDate(d);
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
